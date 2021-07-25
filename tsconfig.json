@@ -6,6 +6,8 @@
       "@pages/*": ["pages/*"],
       "@components/*": ["components/*"],
       "@store/*": ["store/*"],
+      "@hooks/*": ["hooks/*"],
+      "@solidity": ["@solidity/*"],
       "@styles/*": ["styles/*"]
     },
     "lib": ["dom", "dom.iterable", "esnext"],

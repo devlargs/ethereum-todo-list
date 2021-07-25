@@ -1,37 +1,43 @@
-import { useEffect, useState } from 'react';
+import WalletConnectProvider from '@walletconnect/web3-provider';
 import Web3 from 'web3';
 import Web3Modal from 'web3modal';
 
-const useWeb3 = () => {
-  const [loading, setLoading] = useState(true);
-  const [provider, setProvider] = useState();
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const providerOptions = {
-        /* See Provider Options Section */
-      };
-
-      const web3Modal = new Web3Modal({
-        // network: 'mainnet', // optional
-        // cacheProvider: true, // optional
-        providerOptions, // required
-      });
-
-      const init = async () => {
-        const temp = await web3Modal.connect();
-        const web3 = new Web3(temp);
-        console.log(web3.eth);
-      };
-
-      init();
-    }
-  }, []);
-
-  return {
-    loading,
-    provider,
-  };
+const providerOptions = {
+  walletconnect: {
+    package: WalletConnectProvider,
+    options: {
+      rpc: {
+        56: 'https://bsc-dataseed.binance.org/',
+        97: 'https://data-seed-prebsc-1-s1.binance.org:8545',
+      },
+      network: 'binance',
+    },
+  },
 };
 
-export default useWeb3;
+let web3Modal;
+if (typeof window !== 'undefined') {
+  web3Modal = new Web3Modal({
+    cacheProvider: true,
+    disableInjectedProvider: false,
+    providerOptions,
+  });
+}
+
+export const getWeb3Modal = (): Web3Modal => web3Modal;
+
+export const initWeb3 = (provider: string): Web3 => {
+  const web3: Web3 = new Web3(provider);
+
+  web3.eth.extend({
+    methods: [
+      {
+        name: 'chainId',
+        call: 'eth_chainId',
+        outputFormatter: web3.utils.hexToNumber as any,
+      },
+    ],
+  });
+
+  return web3;
+};
