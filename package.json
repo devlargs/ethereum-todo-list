@@ -33,7 +33,9 @@
     "framer-motion": "^4.1.17",
     "next": "11.0.1",
     "react": "17.0.2",
-    "react-dom": "17.0.2"
+    "react-dom": "17.0.2",
+    "web3": "^1.4.0",
+    "web3modal": "^1.9.3"
   },
   "devDependencies": {
     "@types/node": "^16.4.1",
