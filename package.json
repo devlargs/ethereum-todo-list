@@ -12,11 +12,6 @@
     "check-updates": "ncu -u",
     "check-updates-minor": "ncu -u -t minor"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run tsc-node && lint-staged"
-    }
-  },
   "lint-staged": {
     "{**/*,*}.{json,css,md}": [
       "prettier --write"

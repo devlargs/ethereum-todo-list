@@ -12,12 +12,21 @@ contract TodoList {
 
     mapping(uint => Task) public tasks;
 
-    constructor() public {
-        createTask("Check out to do");
-    }
+    // constructor() public {
+    //     createTask("suntukan");
+    // }
 
-    function createTask(string memory _content ) public {
+    function createTask(string memory _content ) public returns(uint) {
         taskCount++;
         tasks[taskCount] = Task(taskCount, _content, false);
+        return taskCount;
+    }
+
+    function deleteTask(uint _id) external {
+        delete tasks[_id];
+    }
+
+    function updateTask(uint _id, bool completed) external {
+        tasks[_id].completed = completed;
     }
 }

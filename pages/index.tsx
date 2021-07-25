@@ -1,4 +1,4 @@
-import { Box, Button, Divider, Heading } from '@chakra-ui/react';
+import { Box, Button, Checkbox, Divider, Heading, Input, Spinner } from '@chakra-ui/react';
 import { getWeb3Modal, initWeb3 } from '@hooks/useWeb3';
 import TODO_LIST from '@solidity/build/contracts/TodoList.json';
 import { FC, useCallback, useState } from 'react';
@@ -9,6 +9,16 @@ const Index: FC = () => {
   const web3Modal = getWeb3Modal();
   const [account, setAccount] = useState('');
   const [taskCount, setTaskCount] = useState<string | number>(0);
+  const [text, setText] = useState<string>('');
+  const [addLoading, setAddLoading] = useState<boolean>(false);
+  const [renderLoading, setRenderLoading] = useState<boolean>(false);
+  const [tasks, setTasks] = useState<
+    Array<{
+      completed: boolean;
+      content: string;
+      id: string;
+    }>
+  >([]);
 
   // console.log(abi, networks[5777].address);
 
@@ -58,19 +68,28 @@ const Index: FC = () => {
     const todoLists = new web3.eth.Contract(TODO_LIST.abi as any, TODO_LIST.networks[5777].address);
 
     const taskCount = await todoLists.methods.taskCount().call();
-    // const lists = await todoLists.methods.tasks();
     setTaskCount(taskCount);
-    // console.log(lists);
 
+    const tempTask: Array<{
+      completed: boolean;
+      content: string;
+      id: string;
+    }> = [];
+    setRenderLoading(true);
     for (let i = 1; i <= taskCount; i++) {
       const task = await todoLists.methods.tasks(i).call();
-      console.log(task);
+      tempTask.push({
+        content: task.content,
+        completed: task.completed ?? false,
+        id: task.id,
+      });
     }
-    // loadTasks();
+    setTasks(tempTask);
+    setRenderLoading(false);
   };
 
   return (
-    <Box p="10">
+    <Box p="10" w="600px" m="auto">
       <Box d="flex" alignItems="center">
         <Button my="10" mr="5" colorScheme="facebook" onClick={account ? onLogout : onConnect}>
           {account ? 'Logout' : 'Connect'}
@@ -78,7 +97,62 @@ const Index: FC = () => {
         <b>{account}</b>
       </Box>
       <Divider />
-      <Heading>Tasks: {taskCount}</Heading>
+      <Heading my="10">Tasks: {renderLoading ? <Spinner /> : tasks.length}</Heading>
+
+      <Divider />
+
+      {account && (
+        <>
+          <Box my="10">
+            <Input placeholder="Enter task" value={text} onChange={(e) => setText(e.target.value)} />
+            <Button
+              mt="2"
+              colorScheme="linkedin"
+              isLoading={addLoading}
+              disabled={!text}
+              onClick={async () => {
+                if (web3 && account) {
+                  const todoLists = new web3.eth.Contract(TODO_LIST.abi as any, TODO_LIST.networks[5777].address);
+
+                  setAddLoading(true);
+                  const task = await todoLists.methods
+                    .createTask(text)
+                    .send({ from: account })
+                    .once('receipt', async (receipt, f) => {
+                      setAddLoading(false);
+                      const taskCount = await todoLists.methods.taskCount().call();
+                      setTasks((e) => [
+                        ...e,
+                        {
+                          content: text,
+                          completed: false,
+                          id: taskCount,
+                        },
+                      ]);
+                      setTaskCount(taskCount);
+                      setText('');
+                    });
+                  console.log(task);
+                }
+              }}
+            >
+              Add task
+            </Button>
+          </Box>
+          <Divider />
+        </>
+      )}
+
+      {renderLoading ? (
+        <Spinner />
+      ) : (
+        tasks.map((q) => (
+          <Box key={q.id}>
+            <Checkbox>{q.content}</Checkbox>
+            <br />
+          </Box>
+        ))
+      )}
     </Box>
   );
 };
